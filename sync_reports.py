@@ -12,7 +12,7 @@ import requests
 from pathlib import Path
 
 REPORTS_DIR = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "ActivityMonitor" / "reports"
-API_URL = os.environ.get("API_URL", "https://your-project.vercel.app")
+API_URL = os.environ.get("API_URL", "https://your-vercel-project.vercel.app")
 
 def get_vercel_token():
     """Obtém token de deploy da Vercel."""
