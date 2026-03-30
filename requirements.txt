@@ -1,0 +1,9 @@
+psutil>=5.9.0
+pywin32>=306
+pywinauto>=0.6.8
+APScheduler>=3.10.0
+pystray>=0.19.5
+Pillow>=10.0.0
+requests>=2.31.0
+win10toast>=0.9
+plyer>=2.1.0

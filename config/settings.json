@@ -1,0 +1,12 @@
+{
+  "ollama_model": "glm4",
+  "ollama_url": "http://localhost:11434/api/chat",
+  "report_hour": 23,
+  "idle_threshold_seconds": 60,
+  "poll_interval_seconds": 10,
+  "score_update_interval_minutes": 60,
+  "startup_with_windows": true,
+  "app_name": "ActivityMonitor",
+  "reports_dir": null,
+  "db_dir": null
+}

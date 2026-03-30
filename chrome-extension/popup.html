@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h2 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: #4ade80;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background: #16213e;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+    .dot.offline {
+      background: #f87171;
+    }
+    .stats {
+      font-size: 13px;
+    }
+    .stats p {
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .footer {
+      margin-top: 15px;
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Activity Monitor</h2>
+  
+  <div class="status">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Conectando...</span>
+  </div>
+  
+  <div class="stats">
+    <p><span>📑 Abas abertas:</span> <span id="tabCount">-</span></p>
+    <p><span>⏱️ Tempo monitorando:</span> <span id="monitorTime">-</span></p>
+  </div>
+  
+  <div class="footer">
+    Dados enviados a cada 30s para o app local
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

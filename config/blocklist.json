@@ -1,0 +1,32 @@
+{
+  "processes": [
+    "1password.exe",
+    "keepass.exe",
+    "keepassxc.exe",
+    "bitwarden.exe",
+    "lastpass.exe",
+    "dashlane.exe",
+    "itauaplicativo.exe",
+    "bradescoapplicativo.exe",
+    "bb.exe",
+    "santander.exe",
+    "nubank.exe"
+  ],
+  "window_title_keywords": [
+    "senha",
+    "password",
+    "cartão de crédito",
+    "credit card",
+    "token",
+    "banking",
+    "banco"
+  ],
+  "url_domains": [
+    "itau.com.br",
+    "bradesco.com.br",
+    "bb.com.br",
+    "santander.com.br",
+    "nubank.com.br",
+    "caixa.gov.br"
+  ]
+}
