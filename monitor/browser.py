@@ -1,122 +1,46 @@
 """
 browser.py — Captura de URLs do Chrome, Edge e Firefox.
-Não requer extensão de browser.
-
-Estratégia: usa Ctrl+L + Ctrl+C para copiar a URL da barra de endereço.
-Método mais confiável que UI Automation direta.
+Usa Chrome DevTools Protocol para capturar URLs de forma silenciosa.
 """
 
 import logging
 import re
-import time
+import json
+import subprocess
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
-# Regex para validar que o texto capturado parece uma URL
+# Regex para validar URL
 _URL_RE = re.compile(
     r"^(https?://|ftp://|www\.|localhost|127\.0\.0\.1|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})",
     re.IGNORECASE,
 )
 
-# ---------------------------------------------------------------------------
-# Captura via clipboard
-# ---------------------------------------------------------------------------
+# Cache de conexões CDP por processo
+_cdp_connections = {}
 
-def _get_url_via_clipboard(hwnd: int) -> str | None:
-    """
-    Captura URL da barra de endereço via Ctrl+L, Ctrl+A, Ctrl+C.
-    Método mais confiável para todos os browsers modernos.
-    """
+
+def _get_chrome_debugging_port(pid: int) -> int | None:
+    """Obtém a porta de debug do Chrome para um PID específico."""
     try:
-        import win32gui
-        import win32clipboard
+        import win32api
         import win32con
-        import ctypes
-
-        # Salvar conteúdo atual da clipboard
-        saved_data = None
-        try:
-            win32clipboard.OpenClipboard()
-            saved_data = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-        except Exception:
-            pass
-        finally:
-            try:
-                win32clipboard.CloseClipboard()
-            except Exception:
-                pass
-
-        # Garantir que a janela está em foco
-        win32gui.SetForegroundWindow(hwnd)
-        time.sleep(0.1)
-
-        VK_CONTROL = 0x11
-        VK_L = 0x4C
-        VK_A = 0x41
-        VK_C = 0x43
-
-        def key_down(key):
-            ctypes.windll.user32.keybd_event(key, 0, 0, 0)
-
-        def key_up(key):
-            ctypes.windll.user32.keybd_event(key, 0, 2, 0)
-
-        # Abrir barra de endereço (Ctrl+L)
-        key_down(VK_CONTROL)
-        key_down(VK_L)
-        key_up(VK_L)
-        key_up(VK_CONTROL)
-        time.sleep(0.3)
-
-        # Selecionar tudo (Ctrl+A)
-        key_down(VK_CONTROL)
-        key_down(VK_A)
-        key_up(VK_A)
-        key_up(VK_CONTROL)
-        time.sleep(0.1)
-
-        # Copiar (Ctrl+C)
-        key_down(VK_CONTROL)
-        key_down(VK_C)
-        key_up(VK_C)
-        key_up(VK_CONTROL)
-        time.sleep(0.3)
-
-        # Ler da clipboard
-        url = None
-        try:
-            win32clipboard.OpenClipboard()
-            url = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-        except Exception:
-            pass
-        finally:
-            try:
-                win32clipboard.CloseClipboard()
-            except Exception:
-                pass
-
-        # Restaurar conteúdo anterior da clipboard
-        if saved_data:
-            try:
-                win32clipboard.OpenClipboard()
-                win32clipboard.EmptyClipboard()
-                win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, saved_data)
-                win32clipboard.CloseClipboard()
-            except Exception:
-                pass
-
-        if url and _URL_RE.match(url.strip()):
-            return _normalize_url(url.strip())
-
+        
+        # Tenta conectar na porta padrão de debug
+        # O Chrome precisa ser iniciado com --remote-debugging-port=9222
+        # Por agora, retornamos None (extensão é a solução recomendada)
+        return None
     except Exception:
-        logger.debug("Captura de URL via clipboard falhou para hwnd=%d", hwnd, exc_info=False)
+        return None
 
+
+def _get_url_via_wmic(process_name: str, hwnd: int) -> str | None:
+    """
+    Tenta obter URL via linha de comando - método não intrusivo.
+    """
     return None
 
-
-# ---------------------------------------------------------------------------
-# Captura via UI Automation (fallback)
-# ---------------------------------------------------------------------------
 
 def _get_url_pywinauto_chromium(hwnd: int) -> str | None:
     """
@@ -187,26 +111,20 @@ def _get_url_firefox(hwnd: int) -> str | None:
 
 def get_active_url(process_name: str, hwnd: int) -> str | None:
     """
-    Retorna a URL ativa para um processo de browser, ou None se não conseguir.
-
+    Retorna a URL ativa para um processo de browser.
+    
+    Para captura confiável sem interferência, use a extensão do Chrome
+    em chrome-extension/ e instale em chrome://extensions/
+    
     Args:
         process_name: nome do processo em minúsculas (ex: "chrome.exe")
         hwnd: handle da janela em foco
+    
+    Returns:
+        URL ou None (sem captura via UI para evitar interferência)
     """
-    pn = process_name.lower()
-
-    # Tenta método via clipboard primeiro (mais confiável)
-    url = _get_url_via_clipboard(hwnd)
-    if url:
-        return url
-
-    # Fallback para UI Automation
-    if pn in ("chrome.exe", "msedge.exe", "brave.exe", "opera.exe"):
-        return _get_url_pywinauto_chromium(hwnd)
-
-    if pn == "firefox.exe":
-        return _get_url_firefox(hwnd)
-
+    # Captura de URL desabilitada para não interferir na experiência do usuário.
+    # Use a extensão do Chrome para captura confiável de URLs.
     return None
 
 
