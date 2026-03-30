@@ -1,131 +1,62 @@
 """
 API para servir relatórios na Vercel.
-Endpoints:
-  GET /             - Lista relatórios disponíveis
-  GET /report/{date} - Retorna relatório HTML de uma data
-  POST /api/upload  - Upload de relatório (requer token)
 """
 
 import os
 import json
-from pathlib import Path
-from datetime import datetime
-import hashlib
 
-REPORTS_DIR = Path(os.environ.get("REPORTS_DIR", "/tmp/ActivityMonitor/reports"))
-UPLOAD_TOKEN = os.environ.get("UPLOAD_TOKEN", "")
+REPORTS_DIR = "/tmp/activity_reports"
+UPLOAD_TOKEN = "dev-token"
 
-REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-
-def get_report(date: str):
-    """Retorna relatório HTML para uma data específica."""
-    html_path = REPORTS_DIR / f"report_{date}.html"
-    
-    if not html_path.exists():
-        return {
-            "statusCode": 404,
-            "body": json.dumps({"error": f"Relatório não encontrado para {date}"}),
-            "headers": {"Content-Type": "application/json"}
-        }
-    
-    with open(html_path, "r", encoding="utf-8") as f:
+def get_report(date):
+    import os
+    path = f"{REPORTS_DIR}/report_{date}.html"
+    if not os.path.exists(path):
+        return {"statusCode": 404, "body": json.dumps({"error": "Not found"}), "headers": {"Content-Type": "application/json"}}
+    with open(path, "r") as f:
         content = f.read()
-    
-    return {
-        "statusCode": 200,
-        "body": content,
-        "headers": {"Content-Type": "text/html"}
-    }
-
+    return {"statusCode": 200, "body": content, "headers": {"Content-Type": "text/html"}}
 
 def list_reports():
-    """Lista relatórios disponíveis."""
-    if not REPORTS_DIR.exists():
-        return {
-            "statusCode": 200,
-            "body": json.dumps({"reports": []}),
-            "headers": {"Content-Type": "application/json"}
-        }
-    
+    import os
     reports = []
-    for f in REPORTS_DIR.glob("report_*.html"):
-        date = f.stem.replace("report_", "")
-        reports.append({
-            "date": date,
-            "url": f"/report/{date}"
-        })
-    
-    reports.sort(key=lambda x: x["date"], reverse=True)
-    
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"reports": reports}),
-        "headers": {"Content-Type": "application/json"}
-    }
-
+    if os.path.exists(REPORTS_DIR):
+        for f in os.listdir(REPORTS_DIR):
+            if f.startswith("report_") and f.endswith(".html"):
+                date = f.replace("report_", "").replace(".html", "")
+                reports.append({"date": date, "url": f"/report/{date}"})
+    reports.sort(reverse=True)
+    return {"statusCode": 200, "body": json.dumps({"reports": reports}), "headers": {"Content-Type": "application/json"}}
 
 def upload_report(request):
-    """Endpoint para upload de relatórios."""
     auth = request.get("headers", {}).get("Authorization", "")
-    
     if not auth.startswith("Bearer "):
-        return {
-            "statusCode": 401,
-            "body": json.dumps({"error": "Token required"}),
-            "headers": {"Content-Type": "application/json"}
-        }
-    
-    token = auth.replace("Bearer ", "")
-    
+        return {"statusCode": 401, "body": json.dumps({"error": "Token required"}), "headers": {"Content-Type": "application/json"}}
     try:
         body = json.loads(request.get("body", "{}"))
         date = body.get("date")
         html = body.get("html")
-        
         if not date or not html:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "date and html required"}),
-                "headers": {"Content-Type": "application/json"}
-            }
-        
-        html_path = REPORTS_DIR / f"report_{date}.html"
-        with open(html_path, "w", encoding="utf-8") as f:
+            return {"statusCode": 400, "body": json.dumps({"error": "date and html required"}), "headers": {"Content-Type": "application/json"}}
+        import os
+        os.makedirs(REPORTS_DIR, exist_ok=True)
+        path = f"{REPORTS_DIR}/report_{date}.html"
+        with open(path, "w") as f:
             f.write(html)
-        
-        return {
-            "statusCode": 200,
-            "body": json.dumps({"status": "ok", "date": date}),
-            "headers": {"Content-Type": "application/json"}
-        }
+        return {"statusCode": 200, "body": json.dumps({"status": "ok", "date": date}), "headers": {"Content-Type": "application/json"}}
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)}),
-            "headers": {"Content-Type": "application/json"}
-        }
-
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)}), "headers": {"Content-Type": "application/json"}}
 
 def handler(request):
-    """Router principal."""
     path = request.get("path", "/")
     method = request.get("method", "GET")
-    
     if path == "/" or path == "":
         return list_reports()
-    
     if path == "/api/upload" and method == "POST":
         return upload_report(request)
-    
     if path.startswith("/report/"):
         date = path.replace("/report/", "").replace(".html", "")
         return get_report(date)
-    
-    return {
-        "statusCode": 404,
-        "body": json.dumps({"error": "Not found"}),
-        "headers": {"Content-Type": "application/json"}
-    }
-
+    return {"statusCode": 404, "body": json.dumps({"error": "Not found"}), "headers": {"Content-Type": "application/json"}}
 
 app = handler
