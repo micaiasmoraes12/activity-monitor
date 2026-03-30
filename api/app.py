@@ -126,3 +126,6 @@ def handler(request):
         "body": json.dumps({"error": "Not found"}),
         "headers": {"Content-Type": "application/json"}
     }
+
+
+app = handler
