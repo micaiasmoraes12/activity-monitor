@@ -1,0 +1,2 @@
+# requirements-api.txt - Dependências apenas para API da Vercel
+# Não inclui dependências Windows

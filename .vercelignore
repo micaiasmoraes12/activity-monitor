@@ -1,0 +1,17 @@
+# Ignore files for Vercel deployment
+# (apenas api/ e vercel.json serão enviados)
+monitor/
+reporter/
+tray/
+main.py
+install.py
+extension_server.py
+sync_reports.py
+requirements-windows.txt
+requirements.txt
+spec_monitor.md
+test_icon.png
+chrome-extension/
+config/
+.gitignore
+.vercelignore
